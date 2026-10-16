@@ -21,7 +21,7 @@ import (
 	"yuima-agent/internal/tools/remindertools"
 	"yuima-agent/internal/tools/todo"
 	"yuima-agent/internal/tools/weathertools"
-	"yuima-agent/internal/tools/web"
+	"yuima-agent/internal/tools/webtools"
 	"yuima-agent/internal/ui"
 	"yuima-agent/internal/weather"
 )
@@ -55,12 +55,12 @@ func main() {
 		store = sqlite.NewStore(db)
 	}
 
-	var searchClient search.SearchClient
+	var searchClient webtools.SearchProvider
 	if cfg.UseMockSearch {
 		 searchClient = search.NewMock()
 	}else {
 		httpClient := http.Client{Timeout: 15*time.Second}
-		searchClient = search.NewClient(httpClient, cfg.SearxNGURL, cfg.FormatSearxNG, cfg.LangSerxNG, cfg.Safesearch)
+		searchClient = search.NewClient(&httpClient, cfg.SearxNGURL, cfg.FormatSearxNG, cfg.LangSerxNG, cfg.Safesearch)
 		
 	}
 	
@@ -92,7 +92,7 @@ func main() {
 
 		weathertools.NewCheckTool(weatherClient, 0),
 
-		web.NewSearchTool(searchClient, 0),
+		webtools.NewSearchTool(searchClient, 0),
 	)
 
 	// Проверка и выбор ЛЛМ или Мок через конфиг
