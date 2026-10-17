@@ -19,21 +19,6 @@ Yuima — desktop AI-агент на Go. Управляет задачами, с
 - SQLite + in-memory хранилища
 - Защита от promt-injection
 
-## Архитектура
-<details>
-<summary><b>Структура проекта (нажмите, чтобы развернуть)</b></summary>
-
-```text
-internal/
-  agent/     — цикл агента, tool calling, сжатие контекста
-  llm/       — провайдеры (Ollama, mock)
-  tools/     — 8 инструментов (todo, reminder, weather, web)
-  storage/   — SQLite и in-memory реализации
-  ui/        — Fyne desktop UI
-  cleaner/   — фоновая очистка задач
-  reminder/  — фоновый сервис напоминаний
-```
-
 ## 🚀 Установка и запуск
 
 ### Требования
@@ -76,3 +61,18 @@ internal/
 ## Дальнейшие изменения
 1. Починить weather_chek
 2. Добавить голосовой ввод
+
+## Архитектура проекта
+<details>
+<summary><b>Структура проекта (нажмите, чтобы развернуть)</b></summary>
+
+```text
+internal/
+  agent/     — цикл агента, tool calling, сжатие контекста
+  llm/       — провайдеры (Ollama, mock)
+  tools/     — 8 инструментов (todo, reminder, weather, web)
+  storage/   — SQLite и in-memory реализации
+  ui/        — Fyne desktop UI
+  cleaner/   — фоновая очистка задач
+  reminder/  — фоновый сервис напоминаний
+```
