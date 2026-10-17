@@ -6,8 +6,10 @@ import (
 	"testing"
 	"time"
 
+	"yuima-agent/internal/search"
 	"yuima-agent/internal/storage/models"
 	"yuima-agent/internal/tools"
+	"yuima-agent/internal/tools/webtools"
 
 	"github.com/openai/openai-go/v3"
 )
@@ -37,6 +39,20 @@ func (f *fakeLLM) AskLLM(ctx context.Context,
 	f.calls++
 	f.lastMessages = make([]openai.ChatCompletionMessageParamUnion, len(message))
 	copy(f.lastMessages, message)
+	if f.calls == 1 {
+		f.resp.ToolCalls = append(f.resp.ToolCalls, openai.ChatCompletionMessageToolCallUnion{
+			Function: openai.ChatCompletionMessageFunctionToolCallFunction{
+				Name: "web_search",
+				Arguments: `{"query": "пирог"}`,
+			},
+			ID: "call_1",
+		})
+		f.resp.Content = ""
+	} else {
+		f.resp.ToolCalls = nil
+		f.resp.Content = "вот рецепт пирога..."
+	}
+	
 	return f.resp, nil
 }
 
@@ -80,5 +96,32 @@ func TestAgent_Run_EmptyInput_UseFakeLLM(t *testing.T) {
                 }
             }
 		})
+	}
+}
+
+func TestAgent_Run_Processing_Tool_Calls(t *testing.T) {
+	fakeHistory := &fakeStore{}
+	fake := &fakeLLM{}
+	mock := search.NewMock()
+	registry := tools.NewRegistry(
+		webtools.NewSearchTool(mock, 0),
+	)
+	a := New(fakeHistory, fake, registry, slog.Default(), 5*time.Minute)
+
+	resp, err := a.Run(context.Background(), "пирог")
+	if err != nil {
+		t.Errorf("ошибка не ожидалась, получили: %v", err)
+	}
+
+	if resp == "" {
+		t.Errorf("Ожидался резульат tool_calling, получили пустую строку")
+	}
+
+	if resp != "вот рецепт пирога..." {
+		t.Errorf("Получили неожиданный результат: \"%s\"",resp)
+	}
+
+	if fake.calls == 2 {
+		t.Errorf("Вызовов ллм меньше ожидаемого")
 	}
 }
